@@ -33,7 +33,7 @@ int main(int argc, char const *argv[])
 
     std::cout << n << '\n';
     auto t1 = std::chrono::system_clock::now();
-    calc_PI<<<1, 256>>>(n, device_res);
+    calc_PI<<<64, 64>>>(n, device_res);
     auto t2 = std::chrono::system_clock::now();
 
     // Wait for GPU to finish before accessing on host
@@ -46,8 +46,8 @@ int main(int argc, char const *argv[])
               << std::chrono::duration <double, std::milli> (t2 - t1).count()
               << " ms.\n";
     
-    // Free 
-    cudaFree(device_res); cudaFree(device_n);
+    // Free
+    cudaFree(device_res);
 
     return 0;
 }

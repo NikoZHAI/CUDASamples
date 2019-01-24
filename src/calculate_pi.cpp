@@ -6,8 +6,6 @@
 
 typedef unsigned long long ullong;
 
-
-__global__
 double calc_PI (ullong t_n) {
     
     double _tp, _pi(0.);
@@ -21,24 +19,22 @@ double calc_PI (ullong t_n) {
 }
 
 
+
+
 int main(int argc, char const *argv[])
 {
     
     int      _pow = std::stoi(argv[1]);
-    ullong n = 1<<_pow;
+    ullong   n = 1<<_pow;
     double   res;
 
-    std::cout<< n;
+    std::cout << "n = " << n << '\n';
     auto t1 = std::chrono::system_clock::now();
-    res = calc_PI<<<1, 1>>>(n);
-    
-    // Wait for GPU to finish before accessing on host
-    cudaDeviceSynchronize();
-
+    res = calc_PI(n);
     auto t2 = std::chrono::system_clock::now();
 
-    std::cout << "Result: " << std::to_string(res) << '\n'
-              << "Computational time: "
+    printf("PI = %1.18f\n", res);
+    std::cout << "Computation time: "
               << std::chrono::duration <double, std::milli> (t2 - t1).count()
               << " ms.\n";
 
