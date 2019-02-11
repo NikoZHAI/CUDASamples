@@ -8,7 +8,7 @@
 #define NUM_BLOCK  128   // Number of thread blocks
 #define NUM_THREAD 128   // Number of threads per block
 
-unsigned int tid;
+int tid;
 double pi = 0;
 
 
@@ -27,12 +27,12 @@ static void HandleError( cudaError_t err,
 
 
 // Kernel that executes on the CUDA device
-__global__ void cal_pi(double *sum, int nbin, int nthreads, int nblocks) {
-	unsigned int i;
+__global__ void cal_pi(double *sum, int nbin, float step, int nthreads, int nblocks) {
+	int i;
 	double x;
 
 	// Sequential thread index across the blocks
-	unsigned int idx = blockIdx.x*blockDim.x+threadIdx.x;
+	int idx = blockIdx.x*blockDim.x+threadIdx.x;
 	
 	for (i=idx; i < nbin; i+=nthreads*nblocks) {
 		x = (i+.5) / nbin;
@@ -44,20 +44,26 @@ __global__ void cal_pi(double *sum, int nbin, int nthreads, int nblocks) {
 int main(int argc, char* argv[]) {
 
 	/* Settings */
-	int n_steps  = 1<<std::stoi(argv[1]);
-	int nblocks  = std::stoi(argv[2]);
-	int nthreads = std::stoi(argv[3]);
+	int n_steps  =  1 << std::stoi(argv[1]);
+	int nblocks;
+	int nthreads;
+	int min_nblocks;
+
+	cudaOccupancyMaxPotentialBlockSize(&min_nblocks, &nthreads, 
+									   cal_pi, 0, 0);
+	nblocks = (n_steps + nthreads - 1) / nthreads;
+
+	dim3 dimGrid(nblocks,1,1);  	// Grid dimensions
+	dim3 dimBlock(nthreads,1,1);  // Block dimensions
+	double *sumHost, *sumDev;  		// Pointer to host & device arrays
+
+	double step = 1.0/n_steps;  						// Step size
+	size_t size = nblocks*nthreads*sizeof(double);  // Size of the device array
 
 	printf("         N          = %11i\n", n_steps);
 	printf("  N thread blocks   = %11i\n", nblocks);
-	printf("N threads per block = %11i\n", nthreads);
+	printf("N threads per block = %11i\n", nblocks);
 
-	dim3 dimGrid(nblocks,1,1);  					// Grid dimensions
-	dim3 dimBlock(nthreads,1,1);    				// Block dimensions
-	double *sumHost, *sumDev;  						// Pointer to host & device arrays						// Step size
-	size_t size = nblocks*nthreads*sizeof(double);  // Size of the device array
-
-	
 	sumHost = (double *)malloc(size);  //  Allocate array on host
 	HANDLE_ERROR(cudaMalloc((void **) &sumDev, size));  // Allocate array on device
 	
@@ -66,7 +72,7 @@ int main(int argc, char* argv[]) {
 	HANDLE_ERROR(cudaMemset(sumDev, 0., size));
 	
 	/* Invoke the CUDA kernel */
-	cal_pi <<<dimGrid, dimBlock>>> (sumDev, n_steps, nthreads, nblocks); // call CUDA kernel
+	cal_pi <<<dimGrid, dimBlock>>> (sumDev, n_steps, step, nthreads, nblocks); // call CUDA kernel
 	cudaDeviceSynchronize();  // Wait for calculations finished
 
 	/* Reduction */

@@ -1,0 +1,8 @@
+.directory
+*.o
+*.cuda
+*.out
+*.txt
+.vscode/
+
+
