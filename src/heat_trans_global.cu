@@ -34,7 +34,7 @@ struct DataBlock;
 __global__ void copy_const_kernel( float*, const float* );
 __global__ void step_run_kernel( float*, const float* );
 __global__ void my_float_to_color( unsigned char*, const float* ); // float to color defined in book.h, line 80
-// template <typename T> void my_swap( T&, T& );
+void my_swap( float**, float** );
 void anim_exit_callback( DataBlock* );
 void anim_gpu( DataBlock*, int );
 
@@ -121,7 +121,7 @@ void anim_gpu ( DataBlock *d, int ticks ) {
         copy_const_kernel <<< dimGrid, dimBlocks >>> ( d->dev_inSrc,
                                                        d->dev_constSrc );
         step_run_kernel <<< dimGrid, dimBlocks >>> ( d->dev_outSrc, d->dev_inSrc );
-        swap( d->dev_inSrc, d->dev_outSrc );
+        my_swap( &d->dev_inSrc, &d->dev_outSrc );
     }
     my_float_to_color <<< dimGrid, dimBlocks >>> ( d->dev_bitmap, d->dev_inSrc );
     cudaDeviceSynchronize();
@@ -191,17 +191,13 @@ __global__ void step_run_kernel( float *outSrc, const float *inSrc ) {
     //                            inSrc[offset16] + inSrc[offset64] );
     /* END OF STUPIDITY */
 
-    int top    = offset - DIM;
-    int right  = offset + 1 ;
-    int bottom = offset + DIM;
-    int left   = offset - 1 ;
+    int top    =      y       ? (offset-DIM) :  offset;
+    int right  = (x != DIM-1) ? (offset + 1) :  offset;
+    int bottom = (y != DIM-1) ? (offset+DIM) :  offset;
+    int left   =      x       ? (offset - 1) :  offset;
 
-    if ( x == 0 )     left++;
-    if ( x == DIM-1 ) right--;
-    if ( y == 0 )     top+=DIM;
-    if ( y == DIM-1 ) bottom-=DIM;
-
-    outSrc[offset] = inSrc[offset] + SPEED * ( inSrc[top] + inSrc[right] + inSrc[bottom] + inSrc[left] - 4.f * inSrc[offset]);
+    outSrc[offset] = ( 1.f - 4.f * SPEED ) * inSrc[offset] + 
+                     SPEED * ( inSrc[top] + inSrc[right] + inSrc[bottom] + inSrc[left]);
 }
 
 
@@ -217,9 +213,8 @@ __global__ void my_float_to_color(unsigned char *ptr, const float *inSrc) {
 }
 
 
-// template <typename T>
-// void my_swap (T &in, T &out) {
-//     T dummy = out;
-//     out = in;
-//     in = dummy;
-// }
+void my_swap (float **in, float **out) {
+    float *dummy = *out;
+    *out = *in;
+    *in = dummy;
+}
