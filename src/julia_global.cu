@@ -11,8 +11,6 @@
 #define DIM (int) 256
 #endif
 
-// struct CComplex;
-// struct CuComplex;
 
 struct CComplex {
     
