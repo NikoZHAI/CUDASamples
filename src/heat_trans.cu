@@ -272,7 +272,7 @@ __global__ void step_run_kernel( float *outSrc, const float *inSrc ) {
     int left   =      x       ? (offset - 1) :  offset;
 
     outSrc[offset] = ( 1.f - 4.f * SPEED ) * inSrc[offset] + 
-                     SPEED * ( inSrc[top] + inSrc[right] + inSrc[bottom] + inSrc[left]);
+                     SPEED * ( inSrc[top] + inSrc[right] + inSrc[bottom] + inSrc[left] );
 }
 
 #else  /* Use Texture Memory */
@@ -286,16 +286,6 @@ void anim_gpu ( DataBlock *d, int ticks ) {
 
     volatile bool dstIsOut = true;  // Ues keyword volatile to prevent caching
     for (size_t i=0; i<NSTEPS; ++i) {
-        // float *in, *out;
-        // if (dstIsOut) {
-        //     in  = d->dev_inSrc;
-        //     out = d->dev_outSrc;
-        // }
-        // else{
-        //     in  = d->dev_outSrc;
-        //     out = d->dev_inSrc;
-        // }
-
         copy_const_kernel <<< dimGrid, dimBlocks >>> ( d->dev_inSrc );
         step_run_kernel <<< dimGrid, dimBlocks >>> ( d->dev_outSrc, dstIsOut );
         my_swap( &d->dev_inSrc, &d->dev_outSrc );
