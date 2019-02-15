@@ -23,7 +23,7 @@ static void HandleError( cudaError_t err,
 
 // Kernel that executes on the CUDA device
 __global__ void cal_pi(double *sum, int nbin, int nthreads, int nblocks) {
-	int i;
+	unsigned int i;
 	double x;
 
 	// Sequential thread index across the blocks
@@ -42,9 +42,8 @@ int main(int argc, char* argv[]) {
 	unsigned int n_steps  = 1<<std::stoi(argv[1]);
 	unsigned int nblocks  = std::stoi(argv[2]);
     unsigned int nthreads = std::stoi(argv[3]);
-    unsigned int nStreams = std::stoi(argv[4]);
 
-	printf("         N          = %11i\n", n_steps);
+	printf("         N          = %11u\n", n_steps);
 	printf("  N thread blocks   = %11i\n", nblocks);
 	printf("N threads per block = %11i\n", nblocks);
 
