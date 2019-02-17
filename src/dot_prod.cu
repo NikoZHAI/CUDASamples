@@ -49,7 +49,7 @@ __global__ void dotProdWithSharedMem(int length, float *u, float *v, float *out)
     cache[cid] = temp;
     __syncthreads();
     
-    int i = blockDim.x/2;
+    int i = nThreadsPerBlock/2;
     while (i != 0) {
         if (cid < i) {
             cache[cid] += cache[cid + i];

@@ -3,7 +3,7 @@
 
 typedef unsigned int U4;
 
-#ifdef USE_F32
+#ifdef USE_FP32
     typedef float T_real;
 #else
     typedef double T_real;
@@ -19,6 +19,12 @@ typedef unsigned int U4;
 
 #ifndef NBLOCKS
     #define NBLOCKS ( U4 )256
+#endif
+
+#ifdef USE_ATOMIC
+    #define SIZE_SERIES NTHREADS
+#else
+    #define SIZE_SERIES NBLOCKS
 #endif
 
 #define TRUE_PI "3.141592653589793238462643383279"
@@ -38,7 +44,24 @@ static void HandleError( cudaError_t err,
 #define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))
 
 
+#ifdef USE_ATOMIC
+__global__ void calc_pi( T_real *pi_series ) {
+    U4 tid = threadIdx.x + blockIdx.x * blockDim.x;
+    T_real item;
+    __shared__ T_real pi_cache[NTHREADS];
+    pi_cache[threadIdx.x] = 0.;
+    // __syncthreads();
+    
+    while( tid < N_SERIES ) {
+        item = ( tid + 0.5 ) * STEP;
+        item = 4. / (1. + item*item);
+        pi_cache[threadIdx.x] += item; // No need for atomicAdd here
+        tid += blockDim.x * gridDim.x;
+    }
 
+    atomicAdd( &pi_series[threadIdx.x], pi_cache[threadIdx.x] );
+}
+#else
 __global__ void calc_pi( T_real *pi_series ) {
     U4 tid = threadIdx.x + blockIdx.x * blockDim.x;
     T_real item;
@@ -57,22 +80,23 @@ __global__ void calc_pi( T_real *pi_series ) {
     // Reduction to NBLOCKS elements
     int i = NTHREADS/2;
     while( i ) {
-        if ( threadIdx.x < NTHREADS/2 ) {
+        if ( threadIdx.x < i ) {
             pi_cache[threadIdx.x] += pi_cache[i + threadIdx.x];
         }
         __syncthreads();
-        i >>= 1;
+        i /= 2;
     }
 
     if (threadIdx.x == 0)
         pi_series[blockIdx.x] += pi_cache[0];
     // atomicAdd( &pi_series[threadIdx.x], pi_cache[threadIdx.x] );
 }
+#endif
 
 
 int main ( void ) {
 
-    U4     size = NBLOCKS * sizeof( T_real );
+    U4     size = SIZE_SERIES * sizeof( T_real );
     T_real my_pi(0.);
     float  elapsed_time;
 
@@ -95,7 +119,7 @@ int main ( void ) {
     HANDLE_ERROR( cudaMemcpy( pi_series, dev_pi_series, size, cudaMemcpyDeviceToHost) );
 
     // Further Reduction
-    for (int i=0; i<NBLOCKS; ++i) {
+    for (int i=0; i<SIZE_SERIES; ++i) {
         my_pi += pi_series[i];
     }
     my_pi *= STEP;
