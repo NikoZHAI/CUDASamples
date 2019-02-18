@@ -13,7 +13,7 @@ CUDA 中存在多种类型的内存模型。一个 CUDA 程序可以选择只使
 
 **用例一：利用共享内存计算向量点积**
 
-```
+```Cuda
 __global__ void dot_prod(int length, float *u, float *v, float *out) {
     __shared__ float cache[nThreadsPerBlock];
     unsigned tid = threadIdx.x + blockDim.x * blockIdx.x;
@@ -48,7 +48,7 @@ __global__ void dot_prod(int length, float *u, float *v, float *out) {
 
 **用例二：利用共享内存做矩阵乘法**
 
-```
+```Cuda
 __global__ void mat_mul(float *a, float* b, float *c, int N)
 {
     __shared__ float aTile[TILE_DIM][TILE_DIM],
@@ -75,7 +75,7 @@ __global__ void mat_mul(float *a, float* b, float *c, int N)
 
 **用例：模拟光线追踪效果**
 
-```
+```Cuda
 __constant__ Sphere dev_s[NSPHERES];
 __global__ void ray_tracing (unsigned char *ptr) {
     int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -115,7 +115,7 @@ __global__ void ray_tracing (unsigned char *ptr) {
 
 **用例：模拟热传导**
 
-```
+```Cuda
 texture <float, 2> texRefConstSrc;
 texture <float, 2> texRefIn;
 texture <float, 2> texRefOut;
