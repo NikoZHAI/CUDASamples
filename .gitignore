@@ -2,7 +2,7 @@
 *.o
 *.cuda
 *.out
+*.gch
 *.txt
 .vscode/
-
 

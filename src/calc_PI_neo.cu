@@ -14,11 +14,11 @@ typedef unsigned int U4;
 #endif
 
 #ifndef NTHREADS
-    #define NTHREADS ( U4 )512
+    #define NTHREADS ( U4 )256
 #endif
 
 #ifndef NBLOCKS
-    #define NBLOCKS ( U4 )256
+    #define NBLOCKS ( U4 )1024
 #endif
 
 #ifdef USE_ATOMIC
