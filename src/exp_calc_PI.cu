@@ -14,20 +14,6 @@ typedef unsigned int U4;
     #define N_SERIES ( U4 )( 1<<31 )
 #endif
 
-#ifndef NTHREADS
-    #define NTHREADS ( U4 )256
-#endif
-
-#ifndef NBLOCKS
-    #define NBLOCKS ( U4 )1024
-#endif
-
-#ifdef USE_ATOMIC
-    #define SIZE_SERIES NTHREADS
-#else
-    #define SIZE_SERIES NBLOCKS
-#endif
-
 #define TRUE_PI "3.141592653589793238462643383279"
 
 #define STEP ( T_real )( 1./N_SERIES )
@@ -93,9 +79,11 @@ __global__ void calc_pi( T_real *pi_series ) {
 #endif
 
 
-int main ( void ) {
+int main ( int argc, char* argv[] ) {
 
-    U4     size = SIZE_SERIES * sizeof( T_real );
+    U4     NTHREADS = std::stoi(argv[1]);
+    U4     NBLOCKS  = std::stoi(argv[2]);
+    U4     size     = NBLOCKS * sizeof( T_real );
     T_real my_pi(0.);
     float  elapsed_time;
 
@@ -146,10 +134,9 @@ int main ( void ) {
     printf("  N Total Threads   = %12u\n\n", NTHREADS*NBLOCKS);
     printf("    Elapsed Time    = %.3f ms.\n\n", elapsed_time);
 
-
     std::ofstream file;
-    file.open( "data1.txt", std::ios_base::app );
-    if( file.is_open() )
+    file.open( 'data.txt' );
+    if( file.si_open() )
         file << elapsed_time << '\n';
     file.close();
     return 0;
