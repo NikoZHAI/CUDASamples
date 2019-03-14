@@ -22,10 +22,11 @@ upper_threads = mean_t_threads + 3*std_t_threads
 lower_threads = mean_t_threads - 3*std_t_threads
 
 ax1 = axs[0]
+ax1.set_title('Fix NBLOCKS = 256')
 l_u = ax1.plot(x_left, mean_t_threads, label='mean elapsed time u (ms)',
                color='royalblue')
 l_plus_3std = ax1.plot(x_left, upper_threads, linestyle=':', color='orangered',
-                       label='u$\pm$3$\sigma$ (ms)', )
+                       label='u$\pm$3$\sigma$ (ms)' )
 l_minus_3std = ax1.plot(x_left, lower_threads, linestyle=':', color='orangered')
 ax1.set_xticks(ticks=x_left)
 ax1.set_xticklabels(x_lab_left, fontsize=8)
@@ -51,6 +52,7 @@ upper_blocks = mean_t_blocks + 3*std_t_blocks
 lower_blocks = mean_t_blocks - 3*std_t_blocks
 
 ax2 = axs[1]
+ax2.set_title('Fix NTHREADS = 256')
 l_u = ax2.plot(x_right, mean_t_blocks, label='mean elapsed time u (ms)',
                color='royalblue')
 l_plus_3std = ax2.plot(x_right, upper_blocks, linestyle=':', color='orangered',
@@ -65,4 +67,7 @@ ax2.set_ylabel('Mean elapsed time [ms]', fontsize=9)
 ax2.legend(loc='center right', fontsize='x-small', bbox_to_anchor=(1., 0.86))
 ax2.grid(ls=':')
 
-fig.show()
+fig.tight_layout()
+# fig.show()
+fig.savefig(fname='stats1.png', dpi=150)
+
